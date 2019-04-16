@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.posts.mapper.BbsSearchHistoryMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap"  type="com.github.pig.bbs.posts.entity.BbsSearchHistory">
+        <id column="id" property="id"  />
+        <result column="user_id" property="userId" />
+        <result column="title" property="title" />
+        <result column="search_time" property="searchTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, user_id AS userId, title,search_time AS searchTime
+    </sql>
+    <delete id="deleteSearchHistory">
+        delete from bbs_search_history where user_id = #{userId}
+    </delete>
+
+
+    <select id="selectSearchHistoryNum" parameterType="com.github.pig.bbs.posts.DOM.BbsSearchHistoryDom" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM bbs_search_history
+        WHERE user_id = #{bbsh.userId}
+        and title = #{bbsh.title}
+    </select>
+
+    <select id="selectByUserId" parameterType="java.lang.Integer" resultType="com.github.pig.bbs.posts.DTO.BbsSearchHistoryDto">
+        SELECT *
+        FROM bbs_search_history
+        WHERE user_id = #{userId}
+        ORDER BY search_time
+        LIMIT  0,10
+    </select>
+
+    <select id="selectHotSearchHistory" resultType="com.github.pig.bbs.posts.DTO.BbsSearchHistoryDto">
+        select count(*)c, t.title from bbs_search_history t where t.title =t.title group by t.title order by c desc limit 0,10
+    </select>
+
+</mapper>

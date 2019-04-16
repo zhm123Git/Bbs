@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.posts.mapper.BbsPostsLabelMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap"  type="com.github.pig.bbs.posts.entity.BbsPostsLabel">
+        <id column="id" property="id"  />
+        <result column="posts_id" property="postsId" />
+        <result column="label_id" property="labelId" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, posts_id AS postsId, label_id AS labelId
+    </sql>
+
+    <insert id="insertPosts" parameterType="com.github.pig.bbs.posts.entity.BbsPostsLabel">
+        INSERT  INTO  bbs_posts_label(posts_id,label_id)
+        VALUES (#{pl.postsId},#{pl.labelId})
+    </insert>
+
+    <select id="selectLabelInfo" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsLabelDom" resultType="com.github.pig.bbs.posts.DTO.BbsPostsLabelDto">
+        SELECT t2.*
+        FROM bbs_posts_label t1 ,bbs_posts t2
+        WHERE t1.label_id = #{bpl.labelId}
+        and t1.posts_id = t2.ID
+        ORDER BY t1.posts_id
+        LIMIT  ${(bpl.page-1)*bpl.pageSize},${bpl.pageSize}
+    </select>
+
+    <select id="getPostsIds"  parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="java.lang.String">
+        SELECT posts_id,COUNT(bp2.posts_id) num FROM bbs_posts_label bp2 WHERE bp2.label_id IN (
+        SELECT bp1.label_id FROM bbs_posts_label bp1 WHERE bp1.posts_id = #{id}
+        )
+        AND bp2.posts_id !=#{id}
+        GROUP BY bp2.posts_id
+        ORDER BY num DESC
+        LIMIT 0,10
+    </select>
+
+    <select id="selectPostsIdByLabelId" parameterType="java.lang.Integer" resultType="java.lang.String">
+        SELECT  posts_id from bbs_posts_label WHERE label_id = #{labelId}
+    </select>
+
+    <delete id="deleteByPostsId" parameterType="java.lang.Integer">
+         DELETE   from bbs_posts_label WHERE posts_id = #{postId}
+    </delete>
+</mapper>

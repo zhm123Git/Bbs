@@ -1,0 +1,4 @@
+com\github\pig\daemon\job\PigDataflowJob.class
+com\github\pig\daemon\PigDaemonApplication.class
+com\github\pig\daemon\job\DemoSimpleJob.class
+com\github\pig\daemon\job\PigSimpleJob.class

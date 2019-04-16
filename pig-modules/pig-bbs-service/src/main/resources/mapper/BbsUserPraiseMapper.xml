@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.posts.mapper.BbsUserPraiseMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.posts.entity.BbsUserPraise">
+        <result column="id" property="id" />
+        <result column="posts_id" property="postsId" />
+        <result column="user_id" property="userId" />
+        <result column="del_flag" property="delFlag" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, posts_id AS postsId, user_id AS userId, del_flag AS delFlag
+    </sql>
+
+
+
+
+    <select id="isPreisa" resultType="Integer" >
+      select status FROM bbs_user_praise
+          WHERE posts_id=#{postsId}
+          and   user_id =#{userSessionId}
+    </select>
+
+
+    <insert id="insertPraise" >
+        INSERT INTO bbs_user_praise(user_id,posts_id,status)
+        VALUES (#{userSessionId},#{postsId},#{status})
+    </insert>
+
+    <insert id="updatePraise" >
+       UPDATE bbs_user_praise set status = #{status}
+       where  posts_id=#{postsId}
+       and   user_id =#{userSessionId}
+    </insert>
+
+
+
+
+
+
+
+
+
+
+    <select id="selectTrample" resultType="Integer" >
+      select id FROM bbs_user_trample
+      WHERE posts_id=#{postsId}
+      and   user_id =#{userSessionId}
+    </select>
+
+
+
+    <insert id="updateTrample" >
+      INSERT INTO bbs_user_trample(user_id,posts_id)
+      VALUES (#{userSessionId},#{postsId})
+    </insert>
+
+    <delete id="deletePraise">
+        DELETE FROM bbs_user_praise
+            WHERE posts_id=#{postsId}
+            AND   user_id =#{userSessionId}
+    </delete>
+
+    <delete id="deleteTrample">
+        DELETE FROM bbs_user_praise
+            WHERE posts_id=#{postsId}
+            AND   user_id =#{userSessionId}
+    </delete>
+    <!--DELETE FROM `db`.`TABLE` WHERE `A`='a' AND `B`='b';-->
+
+
+
+
+</mapper>

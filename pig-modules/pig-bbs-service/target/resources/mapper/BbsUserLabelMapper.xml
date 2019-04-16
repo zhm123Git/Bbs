@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.label.mapper.BbsUserLabelMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.label.entity.BbsUserLabel">
+        <id column="id" property="id" />
+        <result column="label_id" property="labelId" />
+        <result column="user_id" property="userId" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, labelId, userId, createTime
+    </sql>
+
+    <select id="selectCounts" parameterType="com.github.pig.bbs.label.DOM.BbsUserLabelDom" resultType="java.lang.Long" >
+        select count(1)
+        FROM bbs_user_label
+        <where>
+            <if test="bul.userId != null">
+                user_id=#{bul.userId}
+            </if>
+            <if test="bul.labelId != null">
+                label_id=#{bul.labelId}
+            </if>
+        </where>
+    </select>
+
+    <select id="selcetLabelById" parameterType="java.lang.Integer" resultType="com.github.pig.bbs.label.DTO.BbsLabelDto" >
+         SELECT t2.name ,t2.id
+         FROM bbs_user_label t1 ,bbs_label t2
+         WHERE t1.user_id = #{id}
+         and t1.label_id= t2.id
+         order by t1.label_id
+    </select>
+
+    <!--根据id查询标签idlist-->
+    <select id="selectbyID" parameterType="java.lang.Integer" resultType="com.github.pig.bbs.label.DTO.BbsUserLabelDto">
+        SELECT t.label_id
+        FROM bbs_user_label t
+        WHERE t.user_id=#{id}
+    </select>
+
+    <!--查询用户关注标签状态-->
+    <select id="selectLabelStatus" parameterType="com.github.pig.bbs.label.DOM.BbsUserLabelDom" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM bbs_user_label
+        WHERE user_id = #{bul.userId}
+        and label_id = #{bul.id}
+    </select>
+
+    <!--添加标签-->
+    <insert id="insertLabel" parameterType="com.github.pig.bbs.label.DOM.BbsUserLabelDom">
+        INSERT INTO bbs_user_label (label_id, user_id, create_time)
+        VALUE (#{bul.labelId} ,#{bul.userId},sysdate())
+    </insert>
+
+    <!--删除标签-->
+    <delete id="delLabel" parameterType="com.github.pig.bbs.label.DOM.BbsUserLabelDom">
+        DELETE  FROM bbs_user_label
+        WHERE user_id = #{bul.userId}
+        and label_id = #{bul.labelId}
+    </delete>
+
+    <select id="selectCountsById" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+        select count(1)
+        FROM bbs_label
+        where  id in (SELECT t.label_id FROM  bbs_user_label t WHERE t.user_id=#{uId})
+       /* order by create_time*/
+    </select>
+</mapper>

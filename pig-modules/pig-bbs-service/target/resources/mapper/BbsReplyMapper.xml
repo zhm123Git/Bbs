@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.posts.mapper.BbsReplyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.posts.entity.BbsReply">
+        <id column="id" property="id" />
+        <result column="pid" property="pid" />
+        <result column="bname" property="bname" />
+        <result column="bid" property="bid" />
+        <result column="posts_id" property="postsId" />
+        <result column="user_id" property="userId" />
+        <result column="content" property="content" />
+        <result column="create_date" property="createDate" />
+        <result column="del_flag" property="delFlag" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, posts_id AS postsId, user_id AS userId, content, create_date AS createDate, del_flag AS delFlag, pid ,bname,bid
+    </sql>
+
+    <select id="selectNum"  resultType="Integer" parameterType="com.github.pig.bbs.posts.DOM.BbsReplyDom">
+        SELECT COUNT(reply.id) FROM bbs_reply reply ,sys_user suser
+        WHERE reply.user_id = suser.user_id
+        AND posts_id= #{postsId}
+        AND
+        <if test="pid != null ">
+            pid =#{pid}
+        </if>
+
+        <if test="pid == null">
+            pid  is NULL
+        </if>
+
+
+
+    </select>
+
+
+    <select id="selectReply"  resultType="com.github.pig.bbs.posts.DTO.BbsReplyDto" parameterType="com.github.pig.bbs.posts.DOM.BbsReplyDom">
+        SELECT reply.*,suser.nick_name AS userName,suser.avatar_url AS userUrl FROM bbs_reply reply ,sys_user suser
+        WHERE reply.user_id = suser.user_id
+        AND posts_id= #{postsId}
+        AND pid  is NULL
+        ORDER BY reply.create_date DESC
+        LIMIT ${(pageNum-1)*pageSize},${pageSize}
+    </select>
+
+    <select id="selectReplyTwo"  resultType="com.github.pig.bbs.posts.DTO.BbsReplyDto" parameterType="com.github.pig.bbs.posts.DOM.BbsReplyDom">
+        SELECT reply.*,suser.nick_name AS userName,suser.avatar_url AS userUrl FROM bbs_reply reply ,sys_user suser
+        WHERE reply.user_id = suser.user_id
+        AND posts_id= #{postsId}
+        AND pid  = #{id}
+        ORDER BY reply.create_date DESC
+    </select>
+
+
+    <update id="updateReply" parameterType="com.github.pig.bbs.posts.DOM.BbsReplyDom">
+        UPDATE  bbs_reply set content = #{content}
+        WHERE  id = #{id}
+    </update>
+
+    <select id="isAccept" parameterType="com.github.pig.bbs.posts.DOM.BbsReplyDom" resultType="com.github.pig.bbs.posts.DOM.BbsReplyDom">
+        SELECT * FROM bbs_reply
+        WHERE id = #{brd.id}
+    </select>
+
+    <update id="acceptReply" parameterType="com.github.pig.bbs.posts.DOM.BbsReplyDom">
+        update bbs_reply set accept=1
+        WHERE  id = #{brd.id}
+    </update>
+
+    <delete id="deleteByIdAndPid" parameterType="com.github.pig.bbs.posts.DOM.BbsReplyDom">
+        DELETE  from  bbs_reply WHERE  pid=#{bbsReplyDom.id}
+    </delete>
+
+    <update id="acceptReplys" parameterType="com.github.pig.bbs.posts.DOM.BbsReplyDom">
+        update bbs_reply set accept=null
+        WHERE  id = #{id}
+    </update>
+</mapper>

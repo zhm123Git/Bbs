@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.user.mapper.BbsNotifyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.user.entity.BbsNotify">
+        <id column="notify_id" property="notifyId" />
+        <result column="user_id" property="userId" />
+        <result column="content" property="content" />
+        <result column="status" property="status" />
+        <result column="notify_type" property="notifyType" />
+        <result column="send_time" property="sendTime" />
+        <result column="read_time" property="readTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        notify_id AS notifyId, user_id AS userId, content, status, notify_type AS notifyType, send_time AS sendTime, read_time AS readTime
+    </sql>
+
+
+    <select id="findNotifyList" resultType="com.github.pig.bbs.user.entity.BbsNotify">
+        SELECT
+        notify_id,
+        user_id,
+        content,
+        status,
+        notify_type,
+        send_time ,
+        read_time
+        from  bbs_notify AS bbsNotify
+        <where>
+            <if test="bbsNotify.userId != null">
+                bbsNotify.userId=#{userId}
+            </if>
+        </where>
+        order by bbsNotify.send_time DESC
+        <if test='pageParams.offset != null and pageParams.limit != null'>
+            limit #{pageParams.offset}, #{pageParams.limit}
+        </if>
+        <if test='pageParams.offset == null and pageParams.limit != null'>
+            limit #{pageParams.limit}
+        </if>
+    </select>
+
+    <select id="selectBbsNotifyCount" resultType="long">
+        SELECT count(1)
+        from  bbs_notify AS bbsNotify
+        <where>
+            <if test="bbsNotify.userId != null">
+                bbsNotify.userId=#{userId}
+            </if>
+        </where>
+    </select>
+
+</mapper>

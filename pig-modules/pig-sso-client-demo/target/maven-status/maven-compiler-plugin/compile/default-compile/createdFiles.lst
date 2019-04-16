@@ -1,0 +1,3 @@
+com\github\pig\sso\controller\DemoController.class
+com\github\pig\sso\PigSsoClientDemoApplication.class
+com\github\pig\sso\config\ResourceServerConfiguration.class

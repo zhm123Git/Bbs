@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.posts.mapper.BbsAuditPostsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.posts.entity.BbsAuditPosts">
+        <result column="id" property="id" />
+        <result column="posts_id" property="postsId" />
+        <result column="content" property="content" />
+        <result column="create_date" property="createDate" />
+        <result column="create_id" property="createId" />
+        <result column="update_date" property="updateDate" />
+        <result column="update_id" property="updateId" />
+        <result column="audit_posts" property="auditPosts" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, posts_id AS postsId, content, create_date AS createDate, create_id AS createId, update_date AS updateDate, update_id AS updateId ,audit_posts AS auditPosts
+    </sql>
+
+    <update id="updatePosts" parameterType="com.github.pig.bbs.posts.DTO.BbsAuditPostsDto">
+        UPDATE bbs_posts
+        SET is_public = #{auditPosts}
+        WHERE id = #{postsId}
+    </update>
+
+    <update id="updateAudit" parameterType="com.github.pig.bbs.posts.entity.BbsAuditPosts">
+        UPDATE bbs_audit_posts
+        SET audit_posts = #{auditPosts} ,content =#{content}
+        WHERE posts_id = #{postsId}
+    </update>
+
+
+    <select id="isAudit" resultType="Integer">
+      select * from bbs_audit_posts
+      where posts_id =#{postsId}
+    </select>
+
+</mapper>

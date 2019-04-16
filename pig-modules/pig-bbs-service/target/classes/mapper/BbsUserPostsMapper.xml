@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.posts.mapper.BbsUserPostsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.posts.entity.BbsUserPosts">
+        <id column="id" property="id" />
+        <result column="posts_id" property="postsId" />
+        <result column="user_id" property="userId" />
+        <result column="create_date" property="createDate" />
+        <result column="del_flag" property="delFlag" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, posts_id AS postsId, user_id AS userId, create_date AS createDate, del_flag AS delFlag
+    </sql>
+    <!--按照用户id以及帖子id查询数据-->
+    <select id="selectByUserIdAndPostsId" resultType="java.lang.Integer">
+      SELECT COUNT(1) FROM  bbs_user_posts WHERE user_id=#{userId} AND posts_id=#{postsId}
+    </select>
+
+</mapper>

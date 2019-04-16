@@ -1,0 +1,27 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.github.pig.admin.model.WeiXinProperties",
+      "name": "weixin",
+      "type": "com.github.pig.admin.model.WeiXinProperties"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.github.pig.admin.model.WeiXinProperties",
+      "name": "weixin.appid",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.github.pig.admin.model.WeiXinProperties",
+      "name": "weixin.grant-type",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.github.pig.admin.model.WeiXinProperties",
+      "name": "weixin.secret",
+      "type": "java.lang.String"
+    }
+  ]
+}

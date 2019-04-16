@@ -1,0 +1,1052 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.posts.mapper.BbsPostsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.posts.entity.BbsPosts">
+        <id column="ID" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="article_type" property="articleType" />
+        <result column="title" property="title" />
+        <result column="content" property="content" />
+        <result column="img_url" property="imgURL" />
+        <result column="img_url_height" property="imgURLHeight" />
+        <result column="img_url_width" property="imgURLWidth" />
+        <result column="reward_point" property="rewardPoint" />
+        <result column="trample_time" property="trampleTime" />
+        <result column="praise_time" property="praiseTime" />
+        <result column="look_time" property="lookTime" />
+        <result column="create_user_id" property="createUserId" />
+        <result column="create_date" property="createDate" />
+        <result column="update_user_id" property="updateUserId" />
+        <result column="update_date" property="updateDate" />
+        <result column="is_public" property="isPublic"></result>
+        <result column="del_flag" property="delFlag" />
+        <result column="posts_desc" property="postsDesc" />
+        <result column="accept" property="accept" />
+    </resultMap>
+
+    <!--子映射集-->
+    <resultMap id="bbsPostsList" type="com.github.pig.bbs.posts.DTO.BbsPostsDto" extends="BaseResultMap">
+        <result column="userLookTime" property="userLookTime"/>
+        <result column="articleTypeName" property="articleTypeName"/>
+        <result column="awardNum" property="awardNum"/>
+        <result column="userName" property="userName"/>
+        <result column="userUrl" property="userUrl"/>
+        <result column="praiseStatus" property="praiseStatus"/>
+        <result column="collectCount" property="collectCount"/>
+        <result column="collectStatus" property="collectStatus"/>
+        <result column="ifConcer" property="ifConcer"/>
+        <result column="enshriNum" property="enshriNum"/>
+        <result column="enshriStatue" property="enshriStatue"/>
+        <result column="postReadTime" property="postReadTime"/>
+        <collection property="bbsLabels" ofType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+            <id column="labelId"  property="id" />
+            <result column="name" property="name" />
+            <result column="labelDesc" property="labelDesc" />
+            <result column="img"  property="img" />
+        </collection>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID AS id, user_id AS userId, article_type AS articleType, title, img_url AS imgURL, reward_point AS rewardPoint, trample_time AS trampleTime, praise_time AS praiseTime, look_time AS lookTime, create_user_id AS createUserId, create_date AS createDate, update_user_id AS updateUserId, update_date AS updateDate, del_flag AS delFlag
+    </sql>
+
+    <!-- 列表查询用 -->
+    <sql id="bbsPosts">
+        bbsPosts.ID AS id, bbsPosts.user_id AS userId, bbsPosts.article_type AS articleType,
+        bbsPosts.title, bbsPosts.img_url AS imgURL, bbsPosts.reward_point AS rewardPoint,
+        bbsPosts.trample_time AS trampleTime,
+        bbsPosts.praise_time AS praiseTime, bbsPosts.look_time AS lookTime, bbsPosts.create_date AS createDate
+    </sql>
+
+
+    <sql id="label">
+        label.id AS labelId  ,label.name  AS name ,label.label_desc as labelDesc ,label.img AS img
+    </sql>
+
+    <sql id="labelA">
+        labelA.labelId  ,labelA.name ,labelA.labelDesc ,labelA.img
+    </sql>
+
+
+
+
+
+
+    <!-- 添加帖子-->
+    <insert id="insertPosts" keyProperty="id"  useGeneratedKeys="true" parameterType="com.github.pig.bbs.posts.entity.BbsPosts" >
+        INSERT INTO bbs_posts (user_id, article_type, title,content ,posts_desc ,img_url,img_url_height,img_url_width,reward_point, create_user_id,create_date,is_public)
+        VALUES (#{userId},#{articleType},#{title},#{content},#{postsDesc},#{imgURL},#{imgURLHeight},#{imgURLWidth},#{rewardPoint},#{userId},sysdate(),#{isPublic})
+    </insert>
+
+    <!--点赞 等操作
+    1赞 2 踩  3 取消赞 4 取消踩
+    -->
+    <update id="postsSatisfaction">
+      UPDATE bbs_posts bbs
+        SET
+        <if test="status == 1 ">
+          bbs.praise_time= bbs.praise_time+1
+        </if>
+
+        <if test="status == 2 ">
+          bbs.trample_time= bbs.trample_time+1
+        </if>
+
+        <if test="status == 3 ">
+          bbs.praise_time= bbs.praise_time-1
+        </if>
+
+        <if test="status == 4 ">
+            bbs.trample_time= bbs.trample_time-1
+        </if>
+    WHERE bbs.id = #{postsId}
+    </update>
+
+
+
+    <!--获取帖子的查询  ids-->
+    <select id="getPostsIds" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom"  resultType="java.lang.String">
+      SELECT posts_id FROM bbs_posts_label bpl
+      WHERE bpl.label_id IN(
+      SELECT label.id FROM bbs_label label
+      WHERE  label.name LIKE '%${query}%'
+      )
+    </select>
+
+    <select id="getAwardNumIds" resultType="java.lang.String" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom">
+        SELECT  posts_id FROM bbs_award
+        GROUP BY posts_id
+        ORDER BY COUNT(posts_id) DESC
+         LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+    </select>
+
+
+    <!-- 查询帖子 -->
+    <select id="selectPosts"  parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom"  resultMap="bbsPostsList">
+          SELECT
+          posts.ID,
+          posts.user_id,
+            (SELECT nick_name FROM sys_user suser WHERE suser.user_id = posts.user_id ) userName
+            ,
+            (SELECT avatar_url FROM sys_user suser WHERE suser.user_id = posts.user_id ) userUrl
+            ,
+        (SELECT STATUS FROM bbs_user_praise
+        WHERE user_id =#{userSessionId}
+        AND posts_id = posts.ID) praiseStatus,
+          posts.article_type,
+          posts.title,
+          posts.content,
+          img_url,
+          posts.img_url_height,
+          posts.img_url_width,
+          posts.reward_point,
+          posts.trample_time,
+          posts.praise_time,
+          posts.look_time,
+          posts.create_date,
+          posts.posts_desc,
+          posts.accept,
+          label.labelId,
+          label.name,
+          label.labelDesc,
+          label.img,
+            (SELECT COUNT(posts_id) awardNum FROM bbs_award
+            WHERE posts_id = posts.ID
+            GROUP BY posts_id )  awardNum ,
+          IFNULL(posts.replyCount, 0) replyCount,
+
+          (SELECT
+            COUNT(*)
+          FROM
+            bbs_user_posts bup
+          WHERE bup.posts_id = posts.ID
+            AND bup.user_id = #{userSessionId}) AS userLookTime
+        FROM
+        (SELECT * FROM
+          (SELECT
+            bp.*
+            FROM
+            bbs_posts bp  LEFT JOIN bbs_posts_label bpl ON bp.ID = bpl.posts_id where bp.is_public=#{isPublic}
+        <if test=" userId != null and userId != 1 ">
+            AND bp.user_id=#{userSessionId}
+        </if>
+        <if test=" labelId != null ">
+            AND bpl.label_id=#{labelId}
+        </if>
+
+        /*AND  bp.article_type!=9*/
+        /*AND  bp.img_url is NOT null AND bp.img_url!=''*/
+        <if test="articleType == 9">
+            AND  bp.article_type=9
+        </if>
+        <if test=" articleType == null or articleType=='' or articleType != 9">
+            AND  bp.article_type!=9
+        </if>
+
+        ) posts1
+          LEFT JOIN
+            (SELECT
+              COUNT(reply.posts_id) AS replyCount,
+              reply.posts_Id
+            FROM
+              bbs_reply reply
+            GROUP BY reply.posts_id) replyA
+            ON replyA.posts_Id = posts1.id
+            WHERE   1=1
+            <if test="articleType!= null and articleType!='' and articleType!=0 ">
+                AND posts1.article_type =  #{articleType}
+
+                <if test="query != null and query != ''">
+                    AND (posts1.title LIKE '%${query}%'
+                    OR   posts1.content LIKE '%${query}%'
+                    <if test="queryIds != null and queryIds != ''">
+                        OR   posts1.ID IN (${queryIds})
+                    </if>
+                    )
+                </if>
+            </if>
+
+        <if test="articleType== null or articleType=='' or articleType!=0">
+            <if test="query != null and query != ''">
+                AND  posts1.title LIKE '%${query}%'
+                OR   posts1.content LIKE '%${query}%'
+                <if test="queryIds != null and queryIds != ''">
+                OR   posts1.ID IN (${queryIds})
+                </if>
+            </if>
+
+        </if>
+
+        <if test=" sort == 5">
+            AND posts1.ID in (${awardNumIds})
+        </if>
+
+            <if test=" sort == 1">
+                ORDER BY create_date DESC
+                LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+            </if>
+
+            <if test=" sort == 2">
+                ORDER BY look_time DESC
+                LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+            </if>
+
+            <if test=" sort == 3">
+                ORDER BY praise_time DESC
+                LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+            </if>
+
+            <if test=" sort == 4">
+                ORDER BY replyCount DESC
+                LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+            </if>
+
+
+
+            ) posts
+          LEFT JOIN
+            (SELECT
+              labelA.id AS labelId,
+              labelA.name AS NAME,
+              labelA.label_desc AS labelDesc,
+              labelA.img AS img,
+              bpl.posts_id
+            FROM
+              bbs_label labelA
+              LEFT JOIN bbs_posts_label bpl
+                ON labelA.id = bpl.label_id) label
+            ON posts.id = label.posts_id
+
+            <if test=" sort == 1">
+                ORDER BY posts.create_date DESC
+            </if>
+
+            <if test=" sort == 2">
+                ORDER BY posts.look_time DESC
+            </if>
+
+            <if test=" sort == 3">
+                ORDER BY posts.praise_time DESC
+            </if>
+
+            <if test=" sort == 4">
+                ORDER BY posts.replyCount DESC
+            </if>
+
+            <if test=" sort == 5">
+                ORDER BY awardNum DESC
+            </if>
+    </select>
+
+    <!--获取某个标签下的帖子-->
+    <select id="selectPostsByLabelId" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultMap="bbsPostsList">
+        SELECT
+          posts.ID,
+          posts.user_id,
+            (SELECT nick_name FROM sys_user suser WHERE suser.user_id = posts.user_id ) userName
+            ,
+            (SELECT avatar_url FROM sys_user suser WHERE suser.user_id = posts.user_id ) userUrl
+            ,
+        (SELECT STATUS FROM bbs_user_praise
+        WHERE user_id =#{userSessionId}
+        AND posts_id = posts.ID) praiseStatus,
+          posts.article_type,
+          posts.title,
+          posts.content,
+          img_url,
+          posts.img_url_height,
+          posts.img_url_width,
+          posts.reward_point,
+          posts.trample_time,
+          posts.praise_time,
+          posts.look_time,
+          posts.create_date,
+          posts.posts_desc,
+          label.labelId,
+          label.name,
+          label.labelDesc,
+          label.img,
+            (SELECT COUNT(posts_id) awardNum FROM bbs_award
+            WHERE posts_id = posts.ID
+            GROUP BY posts_id )  awardNum ,
+          IFNULL(posts.replyCount, 0) replyCount,
+
+          (SELECT
+            COUNT(*)
+          FROM
+            bbs_user_posts bup
+          WHERE bup.posts_id = posts.ID
+            AND bup.user_id = #{userSessionId}) AS userLookTime
+        FROM
+        (SELECT * FROM
+          (SELECT
+            bp.*
+          FROM
+            bbs_posts bp left JOIN  bbs_posts_label bpl ON bp.ID = bpl.posts_id
+            where bp.is_public=#{isPublic}  AND  bpl.label_id=#{labelId}
+        ) posts1
+          LEFT JOIN
+            (SELECT
+              COUNT(reply.posts_id) AS replyCount,
+              reply.posts_Id
+            FROM
+              bbs_reply reply
+            GROUP BY reply.posts_id) replyA
+            ON replyA.posts_Id = posts1.id
+            WHERE   1=1
+			ORDER BY create_date DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+            ) posts
+          LEFT JOIN
+            (SELECT
+              labelA.id AS labelId,
+              labelA.name AS NAME,
+              labelA.label_desc AS labelDesc,
+              labelA.img AS img,
+              bpl.posts_id
+            FROM
+              bbs_label labelA
+              LEFT JOIN bbs_posts_label bpl
+                ON labelA.id = bpl.label_id) label
+            ON posts.id = label.posts_id
+        <if test=" sort == 1">
+            ORDER BY posts.create_date DESC
+        </if>
+
+        <if test=" sort == 2">
+            ORDER BY posts.look_time DESC
+        </if>
+
+        <if test=" sort == 3">
+            ORDER BY posts.praise_time DESC
+        </if>
+
+        <if test=" sort == 4">
+            ORDER BY posts.replyCount DESC
+        </if>
+
+        <if test=" sort == 5">
+            ORDER BY awardNum DESC
+        </if>
+    </select>
+    <!-- 获取帖子总数-->
+    <select id="selectAllNum" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="int">
+       SELECT count(1) from bbs_posts bp
+        left JOIN  bbs_posts_label bpl ON bp.ID = bpl.posts_id
+        WHERE   bp.is_public=#{isPublic}
+        <if test="articleType!= null and articleType!='' and articleType!=0">
+            AND bp.article_type =  #{articleType}
+
+            <if test="query != null and query != ''">
+                AND (bp.title LIKE '%${query}%'
+                OR   bp.content LIKE '%${query}%'
+                <if test="queryIds != null and queryIds != ''">
+                    OR  bp.ID IN (${queryIds})
+                </if>
+                )
+            </if>
+        </if>
+        <if test=" userId != null and userId != 1 ">
+            AND bp.user_id=#{userSessionId}
+        </if>
+        <if test="labelId != null ">
+            AND  bpl.label_id=#{labelId}
+        </if>
+    </select>
+    <!--获取置顶的帖子列表-->
+    <select id="selectTopPosts" resultMap="bbsPostsList">
+        SELECT
+      posts.ID,
+      posts.user_id,
+      	  (SELECT nick_name FROM sys_user suser WHERE suser.user_id = posts.user_id ) userName
+          ,
+          (SELECT avatar_url FROM sys_user suser WHERE suser.user_id = posts.user_id ) userUrl
+          ,
+     (SELECT STATUS FROM bbs_user_praise
+        WHERE user_id =#{userId}
+        AND posts_id = posts.ID) praiseStatus,
+      posts.article_type,
+      posts.title,
+      posts.content,
+      img_url,
+       posts.img_url_height,
+       posts.img_url_width,
+      posts.reward_point,
+      posts.trample_time,
+      posts.praise_time,
+      posts.look_time,
+      posts.create_date,
+      posts.posts_desc,
+      label.labelId,
+      label.name,
+      label.labelDesc,
+      label.img,
+      IFNULL(posts.replyCount, 0) replyCount,
+      (SELECT
+        COUNT(*)
+      FROM
+        bbs_user_posts bup
+      WHERE bup.posts_id = posts.ID
+        AND bup.user_id = #{userId}) AS userLookTime
+    FROM
+      (SELECT
+        *
+      FROM
+        (SELECT
+          posts2.*
+        FROM
+          bbs_top_posts topPosts
+          LEFT JOIN bbs_posts posts2
+            ON topPosts.posts_id = posts2.ID
+        ORDER BY topPosts.top_auth DESC
+        LIMIT 0, ${pageSize} ) posts1
+        LEFT JOIN
+          (SELECT
+            COUNT(reply.posts_id) AS replyCount,
+            reply.posts_Id
+          FROM
+            bbs_reply reply
+          GROUP BY reply.posts_id) replyA
+          ON replyA.posts_Id = posts1.id) posts
+      LEFT JOIN
+        (SELECT
+          labelA.id AS labelId,
+          labelA.name AS NAME,
+          labelA.label_desc AS labelDesc,
+          labelA.img AS img,
+          bpl.posts_id
+        FROM
+          bbs_label labelA
+          LEFT JOIN bbs_posts_label bpl
+            ON labelA.id = bpl.label_id) label
+        ON posts.id = label.posts_id
+    </select>
+
+    <!-- 获取单个帖子查看-->
+    <select id="getPosts"  parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom"  resultMap="bbsPostsList">
+        SELECT
+        posts.ID,
+        posts.user_id,
+        (SELECT nick_name FROM sys_user suser WHERE suser.user_id = posts.user_id ) userName
+          ,
+        (SELECT avatar_url FROM sys_user suser WHERE suser.user_id = posts.user_id ) userUrl
+          ,
+          (SELECT COUNT(1) FROM bbs_concern  bcs WHERE bcs.concerned_id = posts.user_id and bcs.concern_id=#{userSessionId}) ifConcer
+          ,
+          (SELECT count(1) from  bbs_user_enshrine  bue where bue.posts_id=posts.ID) enshriNum,
+          (SELECT count(1) from  bbs_user_enshrine  bue where bue.user_id=#{userSessionId} and bue.posts_id=posts.ID) enshriStatue,
+               (SELECT STATUS FROM bbs_user_praise
+        WHERE user_id =#{userSessionId}
+        AND posts_id = posts.ID) praiseStatus,
+        posts.article_type,
+        (SELECT NAME FROM bbs_article_type  WHERE id = article_type  ) articleTypeName,
+        posts.title,
+        posts.content,
+        img_url,
+       posts.img_url_height,
+       posts.img_url_width,
+        posts.content,
+        posts.reward_point,
+        posts.trample_time,
+        posts.praise_time,
+        posts.look_time,
+        posts.create_date,
+        posts.del_flag,
+        posts.accept,
+        label.labelId,
+        label.name,
+        label.labelDesc,
+        label.img,
+        IFNULL(posts.replyCount, 0) replyCount,
+         (SELECT COUNT(1) from bbs_user_enshrine bue where bue.posts_id=posts.ID) collectCount,
+        ( SELECT COUNT(1) from bbs_user_enshrine bue where bue.user_id=#{userSessionId} AND bue.posts_id=#{id}) collectStatus,
+        (SELECT
+        COUNT(*)
+        FROM
+        bbs_user_posts bup
+        WHERE bup.posts_id = posts.ID
+        AND bup.user_id = #{userSessionId}) AS userLookTime,
+        (SELECT count(1) from (select user_id,count(1) from  bbs_user_posts WHERE posts_id=#{id}
+        GROUP BY user_id) urp) postReadTime
+        FROM
+        (SELECT * FROM
+        (SELECT
+        *
+        FROM
+        bbs_posts) posts1
+        LEFT JOIN
+        (SELECT
+        COUNT(reply.posts_id) AS replyCount,
+        reply.posts_Id
+        FROM
+        bbs_reply reply
+        GROUP BY reply.posts_id) replyA
+        ON replyA.posts_Id = posts1.id
+        WHERE   posts1.ID =#{id}
+        ) posts
+        LEFT JOIN
+        (SELECT
+        labelA.id AS labelId,
+        labelA.name AS NAME,
+        labelA.label_desc AS labelDesc,
+        labelA.img AS img,
+        bpl.posts_id
+        FROM
+        bbs_label labelA
+        LEFT JOIN bbs_posts_label bpl
+        ON labelA.id = bpl.label_id) label
+        ON posts.id = label.posts_id
+    </select>
+
+
+
+
+    <insert id="attentionPosts" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom">
+        INSERT  INTO bbs_user_attention(posts_id, user_id, create_date)
+        VALUES (#{id},#{userSessionId},sysdate())
+    </insert>
+    <!--收藏帖子-->
+    <insert id="enshrinePosts" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom">
+        INSERT  INTO bbs_user_enshrine(posts_id, user_id, create_date)
+        VALUES (#{id},#{userSessionId},sysdate())
+    </insert>
+    <!--取消收藏帖子-->
+    <delete id="delEnshrinePosts">
+        DELETE  from  bbs_user_enshrine
+        WHERE
+        posts_id=#{id} AND  user_id=#{userSessionId}
+    </delete>
+
+    <!--查看当前登录用户是否收藏此帖子-->
+    <select id="selectenshrinePost" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultMap="bbsPostsList">
+         SELECT posts_id AS ID, (SELECT COUNT(1) collectStatus from bbs_user_enshrine WHERE
+        posts_id=#{id} AND  user_id=#{userSessionId}) collectStatus,
+        ( SELECT COUNT(1)  from bbs_user_enshrine WHERE
+                posts_id=#{id}) collectCount
+        from bbs_user_enshrine WHERE
+        posts_id=#{id} GROUP BY posts_id
+    </select>
+
+    <select id="isAttentionPosts" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="Integer">
+        select id from bbs_user_attention
+        WHERE posts_id=#{id}
+        AND   user_id=#{userSessionId}
+    </select>
+
+    <select id="isEnshrinePosts" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="Integer">
+        select id from bbs_user_enshrine
+        WHERE posts_id=#{id}
+        AND   user_id=#{userSessionId}
+    </select>
+
+
+
+    <select id="selectAttentionPostsIds" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom"  resultType="java.lang.String">
+        SELECT posts_id FROM bbs_user_attention
+
+        WHERE   user_id=#{userSessionId}
+    </select>
+
+    <select id="selectEnshrinePostsIds" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom"  resultType="java.lang.String">
+        SELECT posts_id FROM bbs_user_enshrine
+
+        WHERE    user_id=#{userSessionId}
+    </select>
+
+    <!--获取收藏 或者关注列表  根据指定的postsId获取列表-->
+    <select id="selectEa"  parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom"  resultMap="bbsPostsList">
+        SELECT
+        posts.ID,
+        posts.user_id,
+        (SELECT nick_name FROM sys_user suser WHERE suser.user_id = posts.user_id ) userName
+        ,
+        (SELECT avatar_url FROM sys_user suser WHERE suser.user_id = posts.user_id ) userUrl
+        ,
+        (SELECT STATUS FROM bbs_user_praise
+        WHERE user_id =#{userSessionId}
+        AND posts_id = posts.ID) praiseStatus,
+
+        posts.article_type,
+        posts.title,
+        posts.content,
+        img_url,
+        posts.img_url_height,
+        posts.img_url_width,
+        posts.reward_point,
+        posts.trample_time,
+        posts.praise_time,
+        posts.look_time,
+        posts.create_date,
+        posts.posts_desc,
+        label.labelId,
+        label.name,
+        label.labelDesc,
+        label.img,
+        IFNULL(posts.replyCount, 0) replyCount,
+        (SELECT
+        COUNT(*)
+        FROM
+        bbs_user_posts bup
+        WHERE bup.posts_id = posts.ID
+        AND bup.user_id = #{userSessionId}) AS userLookTime
+        FROM
+        (SELECT * FROM
+        (SELECT
+        *
+        FROM
+        bbs_posts) posts1
+        LEFT JOIN
+        (SELECT
+        COUNT(reply.posts_id) AS replyCount,
+        reply.posts_Id
+        FROM
+        bbs_reply reply
+        GROUP BY reply.posts_id) replyA
+        ON replyA.posts_Id = posts1.id
+        <if test="queryIds!=null and queryIds!='' ">
+        WHERE  posts1.ID IN (${queryIds})
+        </if>
+
+        <if test=" sort == 1">
+            ORDER BY create_date DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 2">
+            ORDER BY look_time DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 3">
+            ORDER BY praise_time DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 4">
+            ORDER BY replyCount DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+
+        ) posts
+        LEFT JOIN
+        (SELECT
+        labelA.id AS labelId,
+        labelA.name AS NAME,
+        labelA.label_desc AS labelDesc,
+        labelA.img AS img,
+        bpl.posts_id
+        FROM
+        bbs_label labelA
+        LEFT JOIN bbs_posts_label bpl
+        ON labelA.id = bpl.label_id) label
+        ON posts.id = label.posts_id
+
+        <if test=" sort == 1">
+            ORDER BY posts.create_date DESC
+        </if>
+
+        <if test=" sort == 2">
+            ORDER BY posts.look_time DESC
+        </if>
+
+        <if test=" sort == 3">
+            ORDER BY posts.praise_time DESC
+        </if>
+
+        <if test=" sort == 4">
+            ORDER BY posts.replyCount DESC
+        </if>
+    </select>
+
+    <!--根据用户id查询获赞数-->
+    <select id="selectEAndLNum" parameterType="java.lang.Integer" resultType="java.lang.Long">
+    SELECT count(1)
+    FROM bbs_posts t1 ,bbs_user_praise t2
+    WHERE t1.user_id = #{id}
+    and t1.ID= t2.posts_id
+    and t2.status = 1
+    </select>
+
+    <!--根据用户id查询收藏数-->
+    <select id="selectLikeNum" parameterType="java.lang.Integer" resultType="java.lang.Long">
+        SELECT count(1)
+        FROM bbs_posts t1 ,bbs_user_enshrine t2
+        WHERE t1.user_id = #{id}
+        and t1.ID= t2.posts_id
+    </select>
+
+    <select id="selectPostsInfo" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="com.github.pig.bbs.posts.DTO.BbsPostsDto">
+        select  p.*,
+        (select nick_name from sys_user u where u.user_id = p.user_id) userName,
+        (select avatar_url from sys_user u where u.user_id = p.user_id) userUrl
+        from bbs_posts p
+        where p.del_flag = 0
+        and p.is_public = #{bp.isPublic}
+        <if test="bp.id != null and ''!= bp.id" >
+            and p.id =  #{bp.id}
+        </if>
+        <if test="bp.userId != null and ''!= bp.userId" >
+            and p.user_id =  #{bp.userId}
+        </if>
+        <if test="bp.title != null and ''!= bp.title" >
+            and p.title =  #{bp.title}
+        </if>
+        <if test="bp.articleType != null and ''!= bp.articleType" >
+            and p.article_type =  #{bp.articleType}
+        </if>
+        <if test="bp.articleType == null or ''== bp.articleType" >
+            and p.article_type !=9
+        </if>
+        ORDER BY  p.update_date DESC
+        limit ${bp.pageNum},${bp.pageSize}
+    </select>
+
+    <!--获取用户收藏分类帖子列表-->
+    <select id="selectEnshrinePosts" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="com.github.pig.bbs.posts.DTO.BbsPostsDto">
+        SELECT t.*,
+        (select nick_name from sys_user u where u.user_id = t.user_id) userName,
+        (select avatar_url from sys_user u where u.user_id = t.user_id) avatarUrl
+        FROM  bbs_posts t
+        WHERE  t.ID in
+        (select t1.*
+        from (select t2.posts_id  from bbs_user_enshrine t2 where t2.user_id = #{bep.userId} )t1)
+        and t.article_type = #{bep.articleType}
+        ORDER BY  update_date
+        limit ${bep.pageNum},${bep.pageSize}
+    </select>
+
+    <select id="selectEStatus" parameterType="com.github.pig.bbs.posts.DOM.EnshrinePostsDom" resultType="java.lang.Long">
+        select count(1)
+        from bbs_user_enshrine
+        where posts_id = #{ePDom.postsId}
+        and user_id = #{ePDom.userId}
+    </select>
+
+    <select id="selectPostsNum" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM  bbs_posts p
+        WHERE  p.user_id = #{bp.userId}
+        and p.is_public = #{bp.isPublic}
+        <if test="bp.id != null and ''!= bp.id" >
+            and p.id =  #{bp.id}
+        </if>
+        <if test="bp.userId != null and ''!= bp.userId" >
+            and p.user_id =  #{bp.userId}
+        </if>
+        <if test="bp.title != null and ''!= bp.title" >
+            and p.title =  #{bp.title}
+        </if>
+        <if test="bp.articleType != null and ''!= bp.articleType" >
+            and p.article_type =  #{bp.articleType}
+        </if>
+        <if test="bp.articleType == null or ''== bp.articleType" >
+            and p.article_type !=9
+        </if>
+    </select>
+
+    <select id="selectEnshrinePostsNum" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM  bbs_posts t
+        WHERE  t.ID in
+        (select t1.*
+        from (select t2.posts_id  from bbs_user_enshrine t2 where t2.user_id = #{bep.userId} )t1)
+        and t.article_type = #{bep.articleType}
+    </select>
+
+    <select id="selectPostsByParma" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="java.lang.String">
+        select title
+        from bbs_posts
+        where
+        <foreach collection="list.querys" separator="and" item="item" index="index"> title LIKE'%${item}%'</foreach>
+        <if test="list.articleType != null and ''!= list.articleType" >
+            and article_type =  #{list.articleType}
+        </if>
+        group by title
+        limit 0,5
+    </select>
+
+    <select id="selectPostsById" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+        select amount
+        from sys_user
+        where user_id = #{userId}
+    </select>
+
+    <select id="selectpostsrewardPoint" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+        select  reward_point
+        from bbs_posts
+        where ID = #{postsId}
+    </select>
+
+    <update id="updateUserRewardPoint" parameterType="com.github.pig.bbs.posts.DTO.BbsPostsDto">
+        update sys_user
+        set  amount= #{pd.rewardPoint}
+        where user_id = #{pd.userId}
+    </update>
+
+    <update id="updateAccept" parameterType="java.lang.Integer">
+        update bbs_posts
+        set  accept= 1
+        where ID = #{id}
+    </update>
+    <!--
+    废弃的一些sql语句
+
+
+
+       SELECT postsA.*,label.* FROM (
+        SELECT
+        posts.ID , posts.user_id , posts.article_type ,
+        posts.title, img_url ,
+        posts.reward_point ,
+        posts.trample_time ,
+        posts.praise_time ,
+        posts.look_time ,
+        posts.create_date ,
+        IFNULL(replyA.replyCount,0) replyCount,
+        (SELECT COUNT(*) FROM bbs_user_posts bup WHERE bup.posts_id = posts.ID AND bup.user_id = #{userSessionId} ) as userLookTime
+        FROM bbs_posts posts LEFT JOIN
+        (
+        SELECT COUNT(reply.posts_id) AS replyCount ,reply.posts_Id  FROM bbs_reply reply  GROUP BY reply.posts_id
+        ) replyA
+        ON replyA.posts_Id = posts.id
+        )   postsA
+        LEFT JOIN
+        (
+        SELECT
+        labelA.id AS labelId,
+        labelA.name  AS NAME ,
+        labelA.label_desc AS labelDesc ,
+        labelA.img AS img,
+        bpl.posts_id
+        FROM bbs_label labelA LEFT JOIN  bbs_posts_label bpl ON labelA.id = bpl.label_id
+        ) label
+        ON label.posts_id = postsA.ID
+
+
+
+
+
+
+     SELECT
+            posts.ID , posts.user_id , posts.article_type ,
+            posts.title, img_url ,
+            posts.reward_point ,
+            posts.trample_time ,
+            posts.praise_time ,
+            posts.look_time ,
+            posts.create_date ,
+            label.id AS labelId,
+            label.name  AS name ,
+            label.label_desc AS labelDesc ,
+            label.img AS img,
+            (SELECT COUNT(*) FROM bbs_user_posts bup WHERE bup.posts_id = posts.ID AND bup.user_id = #{userSessionId} ) AS userLookTime
+
+
+            FROM bbs_posts posts ,bbs_posts_label bpl,bbs_label label
+            WHERE posts.ID = bpl.posts_id AND bpl.label_id= label.id
+
+
+
+               查询帖子列表
+            （帖子表 ——（ 标签表————标签帖子中间表 ））—— 帖子回复表
+	(是否浏览过该贴子 为当前用户id 和 文章id  去 user_posts 中间表 进行分组查询所得)
+
+	条件    and
+
+    -->
+    <update id="updateLookTimeById" parameterType="java.lang.Integer">
+        UPDATE  bbs_posts set look_time=look_time+1 WHERE ID=#{id}
+    </update>
+
+    <!--查询某个用户创建的帖子草稿-->
+    <select id="getDraftsPostsByUserId" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="com.github.pig.bbs.posts.DTO.BbsPostsDto">
+        SELECT
+        posts.ID,
+        posts.user_id,
+        (SELECT nick_name FROM sys_user suser WHERE suser.user_id = posts.user_id ) userName
+        ,
+        (SELECT avatar_url FROM sys_user suser WHERE suser.user_id = posts.user_id ) userUrl
+        ,
+        (SELECT STATUS FROM bbs_user_praise
+        WHERE user_id =#{userSessionId}
+        AND posts_id = posts.ID) praiseStatus,
+        posts.article_type,
+        posts.title,
+        img_url,
+        posts.reward_point,
+        posts.trample_time,
+        posts.praise_time,
+        posts.look_time,
+        posts.create_date,
+        posts.posts_desc,
+        label.labelId,
+        label.name,
+        label.labelDesc,
+        label.img,
+        (SELECT COUNT(posts_id) awardNum FROM bbs_award
+        WHERE posts_id = posts.ID
+        GROUP BY posts_id )  awardNum ,
+        IFNULL(posts.replyCount, 0) replyCount,
+
+        (SELECT
+        COUNT(*)
+        FROM
+        bbs_user_posts bup
+        WHERE bup.posts_id = posts.ID
+        AND bup.user_id = #{userSessionId}) AS userLookTime
+        FROM
+        (SELECT * FROM
+        (SELECT
+        *
+        FROM
+        bbs_posts where is_public=#{isPublic}
+        <if test=" userId != null and userId != 1 ">
+            AND user_id=#{userSessionId}
+        </if>
+        ) posts1
+        LEFT JOIN
+        (SELECT
+        COUNT(reply.posts_id) AS replyCount,
+        reply.posts_Id
+        FROM
+        bbs_reply reply
+        GROUP BY reply.posts_id) replyA
+        ON replyA.posts_Id = posts1.id
+        WHERE   1=1
+        <if test="articleType!= null and articleType!='' and articleType!=0">
+            AND posts1.article_type =  #{articleType}
+
+            <if test="query != null and query != ''">
+                AND (posts1.title LIKE '%${query}%'
+                OR   posts1.content LIKE '%${query}%'
+                <if test="queryIds != null and queryIds != ''">
+                    OR   posts1.ID IN (${queryIds})
+                </if>
+                )
+            </if>
+        </if>
+
+        <if test="articleType== null or articleType=='' or articleType!=0">
+            <if test="query != null and query != ''">
+                AND  posts1.title LIKE '%${query}%'
+                OR   posts1.content LIKE '%${query}%'
+                <if test="queryIds != null and queryIds != ''">
+                    OR   posts1.ID IN (${queryIds})
+                </if>
+            </if>
+
+        </if>
+
+        <if test=" sort == 5">
+            AND posts1.ID in (${awardNumIds})
+        </if>
+
+        <if test=" sort == 1">
+            ORDER BY create_date DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 2">
+            ORDER BY look_time DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 3">
+            ORDER BY praise_time DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 4">
+            ORDER BY replyCount DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+
+
+        ) posts
+        LEFT JOIN
+        (SELECT
+        labelA.id AS labelId,
+        labelA.name AS NAME,
+        labelA.label_desc AS labelDesc,
+        labelA.img AS img,
+        bpl.posts_id
+        FROM
+        bbs_label labelA
+        LEFT JOIN bbs_posts_label bpl
+        ON labelA.id = bpl.label_id) label
+        ON posts.id = label.posts_id
+
+        <if test=" sort == 1">
+            ORDER BY posts.create_date DESC
+        </if>
+
+        <if test=" sort == 2">
+            ORDER BY posts.look_time DESC
+        </if>
+
+        <if test=" sort == 3">
+            ORDER BY posts.praise_time DESC
+        </if>
+
+        <if test=" sort == 4">
+            ORDER BY posts.replyCount DESC
+        </if>
+
+        <if test=" sort == 5">
+            ORDER BY awardNum DESC
+        </if>
+    </select>
+
+    <!--修改帖子-->
+    <update id="updatePostById" parameterType="com.github.pig.bbs.posts.entity.BbsPosts">
+        UPDATE  bbs_posts set article_type=#{articleType},title=#{title},
+       content= #{content},posts_desc=#{postsDesc},img_url=#{imgURL},
+       img_url_height=#{imgURLHeight},img_url_width=#{imgURLWidth},update_date=sysdate(),
+        is_public=#{isPublic} WHERE ID=#{id}
+    </update>
+</mapper>

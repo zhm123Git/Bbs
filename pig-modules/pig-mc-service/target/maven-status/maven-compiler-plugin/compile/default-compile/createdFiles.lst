@@ -1,0 +1,11 @@
+com\github\pig\mc\config\DingTalkPropertiesConfig.class
+com\github\pig\mc\handler\DingTalkMessageHandler.class
+com\github\pig\mc\listener\MobileServiceChangeReceiveListener.class
+com\github\pig\mc\handler\SmsMessageHandler.class
+com\github\pig\mc\listener\MobileCodeReceiveListener.class
+META-INF\spring-configuration-metadata.json
+com\github\pig\mc\handler\AbstractMessageHandler.class
+com\github\pig\mc\config\SmsAliyunPropertiesConfig.class
+com\github\pig\mc\handler\SmsAliyunMessageHandler.class
+com\github\pig\mc\PigMessageCenterApplication.class
+com\github\pig\mc\listener\DingTalkServiceChangeReceiveListener.class

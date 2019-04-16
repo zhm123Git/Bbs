@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.label.mapper.BbsLabelMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.label.entity.BbsLabel">
+        <id column="id" property="id" />
+        <result column="pid" property="pid" />
+        <result column="name" property="name" />
+        <result column="label_desc" property="labelDesc" />
+        <result column="img" property="img" />
+        <result column="create_user_id" property="createUserId" />
+        <result column="create_time" property="createTime" />
+        <result column="update_user_id" property="updateUserId" />
+        <result column="update_time" property="updateTime" />
+        <result property="delFlag" column="del_flag"/>
+        <result property="level" column="level"/>
+        <result property="type" column="type"/>
+    </resultMap>
+
+
+    <resultMap id="BbsPosts" type="com.github.pig.bbs.posts.entity.BbsPosts">
+        <id column="ID" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="article_type" property="articleType" />
+        <result column="title" property="title" />
+        <result column="content" property="content" />
+        <result column="img_url" property="imgURL" />
+        <result column="reward_point" property="rewardPoint" />
+        <result column="trample_time" property="trampleTime" />
+        <result column="praise_time" property="praiseTime" />
+        <result column="look_time" property="lookTime" />
+        <result column="create_user_id" property="createUserId" />
+        <result column="create_date" property="createDate" />
+        <result column="update_user_id" property="updateUserId" />
+        <result column="update_date" property="updateDate" />
+        <result column="is_public" property="isPublic"></result>
+        <result column="del_flag" property="delFlag" />
+        <result column="posts_desc" property="postsDesc" />
+    </resultMap>
+
+    <!--子映射集-->
+    <resultMap id="bbsPostsList" type="com.github.pig.bbs.posts.DTO.BbsPostsDto" extends="BbsPosts">
+    <result column="userLookTime" property="userLookTime"/>
+    <result column="articleTypeName" property="articleTypeName"/>
+    <result column="awardNum" property="awardNum"/>
+    <result column="userName" property="userName"/>
+    <result column="userUrl" property="userUrl"/>
+    <result column="praiseStatus" property="praiseStatus"/>
+    <result column="collectCount" property="collectCount"/>
+    <result column="collectStatus" property="collectStatus"/>
+    <collection property="bbsLabels" ofType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+        <id column="labelId"  property="id" />
+        <result column="name" property="name" />
+        <result column="labelDesc" property="labelDesc" />
+        <result column="img"  property="img" />
+    </collection>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, pid, name, level,TYPE , label_desc AS labelDesc , img, create_user_id AS createUserId, create_time AS createTime, update_user_id AS updateUserId, update_time AS updateTime, del_flag
+    </sql>
+
+    <select id="selectAllLabel" resultType="com.github.pig.bbs.label.entity.BbsLabel">
+      SELECT  <include refid="Base_Column_List"/>  from bbs_label
+    </select>
+
+    <select id="selectLabel"   resultMap="BaseResultMap">
+      SELECT <include refid="Base_Column_List"/> FROM  bbs_label label
+        WHERE
+        <if test="status == 1">
+            label.id = #{bbsLabel.pid}
+        </if>
+
+        <if test="status == 2">/* 本方法调用mysql函数 具体方法在数据库中 */
+            FIND_IN_SET(id, getLabelTree(#{bbsLabel.id}))
+        </if>
+
+        <if test="status == 3 ">
+            label.type  = #{bbsLabel.type}  AND
+            label.level = #{bbsLabel.level}
+        </if>
+
+    </select>
+
+    <select id="openLabel" resultMap="BaseResultMap">
+        SELECT  <include refid="Base_Column_List"/>
+        FROM  bbs_label
+        WHERE
+        <if test="id == null or id == 0">
+         pid is NULL
+        </if>
+
+        <if test="id != null">
+          pid = #{id}
+        </if>
+    </select>
+
+    <select id="selectTypeLabel" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom" resultMap="BaseResultMap">
+      select <include refid="Base_Column_List"/>  FROM bbs_label
+      WHERE  TYPE = #{type}
+    </select>
+
+    <!--根据用户查询关注标签信息-->
+    <select id="selectLabelInfo" parameterType="com.github.pig.bbs.label.DOM.BbsUserLabelDom" resultType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+        select <include refid="Base_Column_List"/>
+        FROM bbs_label
+        where  id in(SELECT t.label_id FROM  bbs_user_label t WHERE t.user_id=#{bl.userId})
+        order by create_time
+        limit ${bl.pageNum} , ${bl.pageSize}
+    </select>
+
+    <select id="getLabelById" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom" resultType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+    select  l.*,
+    (SELECT count(1) from bbs_user_label WHERE label_id=l.id) attentionUsers,
+    (SELECT count(1) FROM bbs_user_label WHERE user_id = #{bbsLabelDom.createUserId} AND label_id=l.id) arttentionStatus
+    from bbs_label l
+    WHERE l.id=#{bbsLabelDom.id}
+    </select>
+
+    <select id="getBrotherLabelListByLabelId" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+    select * from bbs_label l WHERE  l.id != #{bbsLabelDom.id} and l.type
+    in  (select type from bbs_label where  id=#{bbsLabelDom.id})
+    </select>
+
+    <select id="getPostsListByLabelId" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultMap="bbsPostsList">
+        SELECT
+        posts.ID,
+        posts.user_id,
+        (SELECT nick_name FROM sys_user suser WHERE suser.user_id = posts.user_id ) userName
+        ,
+        (SELECT avatar_url FROM sys_user suser WHERE suser.user_id = posts.user_id ) userUrl
+        ,
+        (SELECT STATUS FROM bbs_user_praise
+        WHERE user_id =#{userSessionId}
+        AND posts_id = posts.ID) praiseStatus,
+        posts.article_type,
+        posts.title,
+        img_url,
+        posts.reward_point,
+        posts.trample_time,
+        posts.praise_time,
+        posts.look_time,
+        posts.create_date,
+        posts.posts_desc,
+        label.labelId,
+        label.name,
+        label.labelDesc,
+        label.img,
+        (SELECT COUNT(posts_id) awardNum FROM bbs_award
+        WHERE posts_id = posts.ID
+        GROUP BY posts_id )  awardNum ,
+        IFNULL(posts.replyCount, 0) replyCount,
+
+        (SELECT
+        COUNT(*)
+        FROM
+        bbs_user_posts bup
+        WHERE bup.posts_id = posts.ID
+        AND bup.user_id = #{userSessionId}) AS userLookTime
+        FROM
+        (SELECT * FROM
+        (SELECT
+        *
+        FROM
+        bbs_posts) posts1
+        LEFT JOIN
+        (SELECT
+        COUNT(reply.posts_id) AS replyCount,
+        reply.posts_Id
+        FROM
+        bbs_reply reply
+        GROUP BY reply.posts_id) replyA
+        ON replyA.posts_Id = posts1.id
+       ) posts
+        LEFT JOIN
+        (SELECT
+        labelA.id AS labelId,
+        labelA.name AS NAME,
+        labelA.label_desc AS labelDesc,
+        labelA.img AS img,
+        bpl.posts_id
+        FROM
+        bbs_label labelA
+        LEFT JOIN bbs_posts_label bpl
+        ON labelA.id = bpl.label_id) label
+        ON posts.id = label.posts_id
+        WHERE label.labelId=#{labelId}
+        <if test=" sort == 5">
+            AND posts1.ID in (${awardNumIds})
+        </if>
+
+        <if test=" sort == 1">
+            ORDER BY create_date DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 2">
+            ORDER BY look_time DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 3">
+            ORDER BY praise_time DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+
+        <if test=" sort == 4">
+            ORDER BY replyCount DESC
+            LIMIT  ${(pageNum-1)*pageSize},${pageSize}
+        </if>
+    </select>
+
+    <!-- 通过标签id获取帖子总数-->
+    <select id="selectAllPostsNumByLabelId" parameterType="com.github.pig.bbs.posts.DOM.BbsPostsDom" resultType="int">
+        SELECT count(1) from bbs_posts p
+        LEFT JOIN  bbs_posts_label pl ON  p.ID=pl.posts_id
+        WHERE  pl.label_id=#{bbsPostsDom.labelId}
+    </select>
+
+    <!-- 通过ID查询标签有多少人关注-->
+    <select id="getattentionNumByLabelId" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom" resultType="long">
+        SELECT count(1) from bbs_user_attention_label WHERE label_id=#{bbsLabelDom.id}
+    </select>
+
+    <!--查询当前用户是否关注标签-->
+    <select id="selectConcernStatusByUserIdAndLableId" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom" resultType="int">
+        SELECT  count(1) from bbs_user_label
+        WHERE user_id=#{bbsLabelDom.createUserId} AND label_id=#{bbsLabelDom.id}
+    </select>
+    <!--点击关注标签-->
+    <insert id="addConcernByLabelId" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom">
+        INSERT  into bbs_user_label (user_id,label_id,create_date)
+        VALUES (#{bbsLabelDom.createUserId},#{bbsLabelDom.id},sysdate());
+    </insert>
+
+    <!--点击取消关注标签-->
+    <delete id="delConcernByLabelId" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom">
+       delete from  bbs_user_label
+        WHERE user_id=#{bbsLabelDom.createUserId} AND label_id=#{bbsLabelDom.id}
+    </delete>
+    <!--查询最热的十条标签-->
+    <select id="getHotestLabelList" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom"   resultType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+          select bl.*,
+          (SELECT count(1) from bbs_user_label WHERE label_id=bl.id) attentionUsers,
+          (SELECT count(1) FROM bbs_user_label WHERE user_id = #{bbsLabelDom.createUserId} AND label_id=bl.id) arttentionStatus
+          from  bbs_label bl
+          ORDER BY attentionUsers DESC
+           LIMIT  0,10
+    </select>
+
+    <!--通过分类ID查询分类下的标签-->
+    <select id="getLabelListByTypeId" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom"   resultType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+        SELECT  *  from  bbs_label WHERE  type=#{type}
+    </select>
+
+    <!--推荐给当前登录人的标签-->
+    <select id="getLabelListByGroom" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom"   resultType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+       SELECT bl.*,
+       (SELECT count(1) from bbs_user_label WHERE label_id=bl.id) attentionUsers,
+    (select count(1) from bbs_user_label WHERE user_id=#{createUserId} AND label_id=bl.id) arttentionStatus
+     from bbs_label bl WHERE bl.id IN (
+    SELECT label_id from bbs_user_label WHERE user_id in (
+        SELECT bc.concerned_id  from  bbs_concern bc WHERE concern_id=#{createUserId}
+        ) and label_id NOT in (SELECT label_id from bbs_user_label where user_id=#{createUserId}) )
+     LIMIT  0,10
+    </select>
+    <!--当推荐标签没有数据时调用此接口-->
+    <select id="getLabelListByGroomAfterNull" parameterType="com.github.pig.bbs.label.DOM.BbsLabelDom"   resultType="com.github.pig.bbs.label.DTO.BbsLabelDto">
+        SELECT bl.*,
+       (SELECT count(1) from bbs_user_label WHERE label_id=bl.id) attentionUsers,
+    (select count(1) from bbs_user_label WHERE user_id=#{createUserId} AND label_id=bl.id) arttentionStatus
+     from bbs_label bl WHERE bl.id not in  (SELECT label_id from bbs_user_label where user_id=#{createUserId})
+     order BY attentionUsers DESC
+     LIMIT  0,10
+    </select>
+
+    <!--查询用户发布帖子的最多类型和标签-->
+    <select id="selectMaxUserLabel" parameterType="java.lang.Integer" resultType="com.github.pig.common.vo.BbsLabelVO">
+    select  t.name,(select  b.count
+    from(
+    select label_Id ,count(*) as count
+    from bbs_user_label
+    where user_id=#{userId}
+    group by label_Id
+    order by count desc
+    limit 1)b) userLabelNum
+    from bbs_label t
+    where t.id=
+    (select  c.label_Id
+    from(
+    select label_Id ,count(*) as count
+    from bbs_user_label
+    where user_id=#{userId}
+    group by label_Id
+    order by count desc
+    limit 1) c)
+    </select>
+
+
+</mapper>

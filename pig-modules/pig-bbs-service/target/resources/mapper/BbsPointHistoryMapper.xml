@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.user.mapper.BbsPointHistoryMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.user.entity.BbsPointHistory">
+        <id column="point_history_id" property="pointHistoryId" />
+        <result column="user_id" property="userId" />
+        <result column="amount" property="amount" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="gift_id" property="giftId" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        point_history_id AS pointHistoryId, user_id AS userId, amount, remark, create_time AS createTime
+    </sql>
+
+    <select id="findPointHistoryList"  resultType="com.github.pig.bbs.user.DTO.BbsPointHistoryDto">
+        SELECT
+        bbsPointHistory.point_history_id,
+        bbsPointHistory.user_id,
+        bbsPointHistory.amount,
+        bbsPointHistory.remark,
+        bbsPointHistory.create_time,
+        DATE_FORMAT(bbsPointHistory.create_time,'%Y-%m-%d') date,
+        DATE_FORMAT(bbsPointHistory.create_time,'%H:%i:%S') time,
+        su.nick_name nickName,
+        bg.img  img
+        from  bbs_point_history AS bbsPointHistory
+        LEFT JOIN sys_user su on su.user_id = bbsPointHistory.user_id
+        LEFT JOIN bbs_gift bg on bg.id = bbsPointHistory.gift_id
+        <where>
+            <if test="bbsPointHistory.userId != null">
+                bbsPointHistory.user_id=#{bbsPointHistory.userId}
+            </if>
+        </where>
+        order by bbsPointHistory.create_time DESC
+        limit ${(pageParams.pageNum-1)*(pageParams.pageSize)}, ${pageParams.pageSize}
+       <!-- <if test='pageParams.offset != null and pageParams.limit != null'>
+            limit #{pageParams.offset}, #{pageParams.limit}
+        </if>
+        <if test='pageParams.offset == null and pageParams.limit != null'>
+            limit #{pageParams.limit}
+        </if>-->
+    </select>
+
+    <select id="selectBbsPointHistoryCount" parameterType="com.github.pig.bbs.user.DTO.BbsPointHistoryDto" resultType="long">
+        SELECT count(1)
+        from  bbs_point_history AS bbsPointHistory
+        <where>
+            <if test="bbsPointHistory.userId != null">
+                bbsPointHistory.user_id=#{bbsPointHistory.userId}
+            </if>
+        </where>
+    </select>
+
+    <update id="updateUserAmount" parameterType="com.github.pig.bbs.user.entity.BbsPointHistory">
+         UPDATE sys_user set amount=#{bph.amount},update_time=sysdate()
+        where user_id=#{bph.userId}
+    </update>
+
+    <select id="selectUserAmount" parameterType="com.github.pig.bbs.user.entity.BbsPointHistory" resultType="int">
+        select amount from sys_user where user_id=#{userId}
+    </select>
+
+
+    <!-- 按照积分消费次数排行-->
+    <select id="findPointRankList" resultType="com.github.pig.bbs.user.DTO.BbsPointHistoryDto">
+        select  h.user_id userId,count(1) as consumTimes,u.nick_name as nickName,u.open_id openId,u.avatar_url avatarUrl, u.city,u.province ,u.country from  bbs_point_history h
+        left join sys_user u on h.user_id = u.user_id
+        <where>
+            <if test="bbsPointHistoryDto.userId != null">
+                h.user_id=#{bbsPointHistoryDto.userId}
+            </if>
+        </where>
+        GROUP BY h.user_id
+        ORDER BY consumTimes DESC
+        <if test='pageParams.offset != null and pageParams.limit != null'>
+            limit #{pageParams.offset}, #{pageParams.limit}
+        </if>
+        <if test='pageParams.offset == null and pageParams.limit != null'>
+            limit #{pageParams.limit}
+        </if>
+    </select>
+
+    <select id="selectBbsPointRankCount" resultType="long">
+        SELECT count(1) from (
+        select  h.user_id  from  bbs_point_history h
+        left join sys_user u on h.user_id = u.user_id
+        <where>
+            <if test="bbsPointHistoryDto.userId != null">
+                h.user_id=#{bbsPointHistoryDto.userId}
+            </if>
+        </where>
+        GROUP BY h.user_id
+        ) c
+    </select>
+
+    <select id="getNickName" resultType="java.lang.String">
+        SELECT nick_name  from  sys_user WHERE user_id =#{createId}
+    </select>
+</mapper>

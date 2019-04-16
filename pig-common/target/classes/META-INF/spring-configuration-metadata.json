@@ -1,0 +1,57 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.github.pig.common.bean.config.FdfsPropertiesConfig",
+      "name": "fdfs",
+      "type": "com.github.pig.common.bean.config.FdfsPropertiesConfig"
+    },
+    {
+      "sourceType": "com.github.pig.common.bean.config.FilterIgnorePropertiesConfig",
+      "name": "ignore",
+      "type": "com.github.pig.common.bean.config.FilterIgnorePropertiesConfig"
+    },
+    {
+      "sourceType": "com.github.pig.common.bean.config.QiniuPropertiesConfig",
+      "name": "qiniu",
+      "type": "com.github.pig.common.bean.config.QiniuPropertiesConfig"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.github.pig.common.bean.config.FdfsPropertiesConfig",
+      "name": "fdfs.file-host",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.github.pig.common.bean.config.FilterIgnorePropertiesConfig",
+      "name": "ignore.clients",
+      "type": "java.util.List<java.lang.String>"
+    },
+    {
+      "sourceType": "com.github.pig.common.bean.config.FilterIgnorePropertiesConfig",
+      "name": "ignore.urls",
+      "type": "java.util.List<java.lang.String>"
+    },
+    {
+      "sourceType": "com.github.pig.common.bean.config.QiniuPropertiesConfig",
+      "name": "qiniu.access-key",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.github.pig.common.bean.config.QiniuPropertiesConfig",
+      "name": "qiniu.bucket",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.github.pig.common.bean.config.QiniuPropertiesConfig",
+      "name": "qiniu.qiniu-host",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.github.pig.common.bean.config.QiniuPropertiesConfig",
+      "name": "qiniu.secret-key",
+      "type": "java.lang.String"
+    }
+  ]
+}

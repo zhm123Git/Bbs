@@ -1,0 +1,41 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.github.pig.mc.config.SmsAliyunPropertiesConfig",
+      "name": "sms.aliyun",
+      "type": "com.github.pig.mc.config.SmsAliyunPropertiesConfig"
+    },
+    {
+      "sourceType": "com.github.pig.mc.config.DingTalkPropertiesConfig",
+      "name": "sms.dingtalk",
+      "type": "com.github.pig.mc.config.DingTalkPropertiesConfig"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.github.pig.mc.config.SmsAliyunPropertiesConfig",
+      "name": "sms.aliyun.access-key",
+      "description": "应用ID",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.github.pig.mc.config.SmsAliyunPropertiesConfig",
+      "name": "sms.aliyun.channels",
+      "description": "短信模板配置",
+      "type": "java.util.Map<java.lang.String,java.lang.String>"
+    },
+    {
+      "sourceType": "com.github.pig.mc.config.SmsAliyunPropertiesConfig",
+      "name": "sms.aliyun.secret-key",
+      "description": "应用秘钥",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.github.pig.mc.config.DingTalkPropertiesConfig",
+      "name": "sms.dingtalk.webhook",
+      "description": "webhook",
+      "type": "java.lang.String"
+    }
+  ]
+}

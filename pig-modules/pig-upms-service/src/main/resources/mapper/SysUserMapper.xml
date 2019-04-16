@@ -1,0 +1,759 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~    Copyright (c) 2018-2025, lengleng All rights reserved.
+  ~
+  ~ Redistribution and use in source and binary forms, with or without
+  ~ modification, are permitted provided that the following conditions are met:
+  ~
+  ~ Redistributions of source code must retain the above copyright notice,
+  ~ this list of conditions and the following disclaimer.
+  ~ Redistributions in binary form must reproduce the above copyright
+  ~ notice, this list of conditions and the following disclaimer in the
+  ~ documentation and/or other materials provided with the distribution.
+  ~ Neither the name of the pig4cloud.com developer nor the names of its
+  ~ contributors may be used to endorse or promote products derived from
+  ~ this software without specific prior written permission.
+  ~ Author: lengleng (wangiegie@gmail.com)
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.admin.mapper.SysUserMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.admin.model.entity.SysUser">
+        <id column="user_id" property="userId"/>
+        <result column="open_id" property="openId" />
+        <result column="nick_name" property="nickName" />
+        <result column="avatar_url" property="avatarUrl" />
+        <result column="gender" property="gender" />
+        <result column="province" property="province" />
+        <result column="insider" property="insider" />
+        <result column="birthday" property="birthday" />
+        <result column="city" property="city" />
+        <result column="country" property="country" />
+        <result column="language" property="language" />
+        <result column="person_signature_name" property="personSignatureName" />
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="phone" property="phone" />
+        <result column="avatar" property="avatar" />
+        <result column="salt" property="salt"/>
+        <result column="dept_id" property="deptId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="del_flag" property="delFlag"/>
+        <result column="allow_flag" property="allowFlag"/>
+        <result column="forbide_flag" property="orbideFlag"/>
+        <result column="amount" property="amount"/>
+    </resultMap>
+
+    <!-- userVo结果集 -->
+    <resultMap id="userVoResultMap" type="com.github.pig.common.vo.UserVO">
+        <id column="user_id" property="userId"/>
+          <result column="username" property="username"/>
+          <result column="password" property="password"/>
+          <result column="salt" property="salt"/>
+          <result column="phone" property="phone" />
+          <result column="avatar" property="avatar" />
+          <result column="create_time" property="createTime"/>
+          <result column="update_time" property="updateTime"/>
+          <result column="deptId" property="deptId"/>
+          <result column="del_flag" property="delFlag"/>
+        <collection property="roleList"  ofType="com.github.pig.common.vo.SysRole">
+            <id column="role_id" property="roleId" />
+            <result column="role_name" property="roleName" />
+            <result column="role_code" property="roleCode" />
+            <result column="role_desc" property="roleDesc" />
+            <result column="create_time" property="createTime" />
+            <result column="update_time" property="updateTime" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="sysUserDtoResultMap" type="com.github.pig.admin.model.dto.SysUserDto" extends="BaseResultMap">
+        <id column="user_id" property="userId"/>
+        <result column="open_id" property="openId" />
+        <result column="nick_name" property="nickName" />
+        <result column="avatar_url" property="avatarUrl" />
+        <result column="gender" property="gender" />
+        <result column="province" property="province" />
+        <result column="city" property="city" />
+        <result column="country" property="country" />
+        <result column="language" property="language" />
+        <result column="person_signature_name" property="personSignatureName" />
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="salt" property="salt"/>
+        <result column="phone" property="phone" />
+        <result column="avatar" property="avatar" />
+        <result column="ucreate_time" property="createTime"/>
+        <result column="uupdate_time" property="updateTime"/>
+        <result column="udel_flag" property="delFlag"/>
+        <result column="allow_flag" property="allowFlag"/>
+        <result column="forbide_flag" property="forbideFlag"/>
+        <result column="deptId" property="deptId"/>
+        <result column="deptName" property="deptName"/>
+        <collection property="roleList" ofType="com.github.pig.common.vo.SysRole">
+            <id column="role_id" property="roleId" />
+            <result column="role_name" property="roleName" />
+            <result column="role_code" property="roleCode" />
+            <result column="role_desc" property="roleDesc" />
+            <result column="rcreate_time" property="createTime" />
+            <result column="rupdate_time" property="updateTime" />
+        </collection>
+    </resultMap>
+    <sql id="Base_Column_List">
+        user_id,open_id,nick_name,avatar_url,gender,insider,birthday,province,city,country,language,person_signature_name,username
+        ,password,phone,avatar,salt,dept_id,create_time,update_time,del_flag,allow_flag,forbide_flag,amount
+    </sql>
+    <sql id="selectUserVo">
+        SELECT
+        `user`.user_id,
+        `user`.username,
+        `user`.`password`,
+        `user`.salt,
+        `user`.phone,
+        `user`.avatar,
+        `user`.del_flag AS del_flag,
+        `user`.dept_id AS deptId,
+        r.role_id,
+        r.role_name,
+        r.role_code,
+        r.role_desc,
+        r.create_time AS create_time,
+        r.update_time AS update_time
+        FROM
+        sys_user AS `user`
+        LEFT JOIN sys_user_role AS ur ON ur.user_id = `user`.user_id
+        LEFT JOIN sys_role AS r ON r.role_id = ur.role_id
+    </sql>
+
+    <select id="selectUserVoByUsername" resultMap="userVoResultMap">
+        <include refid="selectUserVo"/>
+        WHERE `user`.username = #{username}
+    </select>
+
+    <select id="selectUserVoByMobile"  resultMap="userVoResultMap">
+        SELECT
+        `user`.user_id,
+        `user`.username,
+        `user`.`password`,
+        `user`.salt,
+        `user`.phone,
+        `user`.avatar,
+        `user`.dept_id,
+        `user`.create_time AS create_time,
+        `user`.update_time AS update_time,
+        `user`.del_flag AS del_flag,
+        `user`.dept_id AS deptId,
+        r.role_id,
+        r.role_name,
+        r.role_code,
+        r.role_desc,
+        r.create_time AS create_time,
+        r.update_time AS update_time
+        FROM
+        sys_user AS `user`
+        LEFT JOIN sys_user_role AS ur ON ur.user_id = `user`.user_id
+        LEFT JOIN sys_role AS r ON r.role_id = ur.role_id
+        WHERE `user`.phone = #{mobile}
+    </select>
+
+    <select id="selectUserVoByOpenId"  resultMap="userVoResultMap">
+        SELECT
+        `user`.user_id,
+        `user`.username,
+        `user`.`password`,
+        `user`.salt,
+        `user`.phone,
+        `user`.avatar,
+        `user`.dept_id,
+        `user`.create_time AS create_time,
+        `user`.update_time AS update_time,
+        `user`.del_flag AS del_flag,
+        `user`.dept_id AS deptId,
+        r.role_id,
+        r.role_name,
+        r.role_code,
+        r.role_desc,
+        r.create_time AS create_time,
+        r.update_time AS update_time
+        FROM
+        sys_user AS `user`
+        LEFT JOIN sys_user_role AS ur ON ur.user_id = `user`.user_id
+        LEFT JOIN sys_role AS r ON r.role_id = ur.role_id
+        WHERE `user`.open_id = #{openId}
+    </select>
+
+    <select id="selectUserVoById" resultMap="userVoResultMap">
+        SELECT
+        `user`.user_id,
+        `user`.username,
+        `user`.`password`,
+        `user`.salt,
+        `user`.phone,
+        `user`.avatar,
+        `user`.create_time AS ucreate_time,
+        `user`.update_time AS uupdate_time,
+        `user`.del_flag AS udel_flag,
+        r.role_id,
+        r.role_name,
+        r.role_code,
+        r.role_desc,
+        r.create_time AS rcreate_time,
+        r.update_time AS rupdate_time,
+        d.name AS deptName,
+        d.dept_id AS deptId
+        FROM
+        sys_user AS `user`
+        LEFT JOIN sys_user_role AS ur ON ur.user_id = `user`.user_id
+        LEFT JOIN sys_role AS r ON r.role_id = ur.role_id
+        LEFT JOIN sys_dept AS d ON d.dept_id = `user`.dept_id
+        WHERE
+        `user`.user_id = #{id}
+    </select>
+
+    <select id="selectUserVoPageDataScope" resultMap="userVoResultMap" >
+        SELECT
+        `user`.user_id,
+        `user`.username,
+        `user`.`password`,
+        `user`.salt,
+        `user`.phone,
+        `user`.avatar,
+        `user`.create_time AS ucreate_time,
+        `user`.update_time AS uupdate_time,
+        `user`.del_flag AS udel_flag,
+        r.role_id,
+        r.role_name,
+        r.role_code,
+        r.role_desc,
+        r.create_time AS rcreate_time,
+        r.update_time AS rupdate_time,
+        d.name AS deptName,
+        d.dept_id AS deptId
+        FROM
+        sys_user AS `user`
+        LEFT JOIN sys_user_role AS ur ON ur.user_id = `user`.user_id
+        LEFT JOIN sys_role AS r ON r.role_id = ur.role_id
+        LEFT JOIN sys_dept AS d ON d.dept_id = `user`.dept_id
+        WHERE
+        r.del_flag = 0
+        <if test="username != null and username != ''">
+            and `user`.username LIKE CONCAT('%',#{username},'%')
+        </if>
+        ORDER BY `user`.create_time DESC
+    </select>
+
+    <!-- 按照微信openId查询当前用户 -->
+    <select id="selectUserByOpenId" resultMap="BaseResultMap">
+        select
+        `user`.user_id,
+        `user`.open_id,
+        `user`.nick_name,
+        `user`.avatar_url,
+        `user`.gender,
+        `user`.province,
+        `user`.city,
+        `user`.country,
+        `user`.language,
+        `user`.username,
+        `user`.phone,
+        `user`.avatar,
+        `user`.create_time AS createTime,
+        `user`.update_time AS updateTime,
+        `user`.del_flag AS delFlag,
+        `user`.allow_flag AS allowFlag,
+        `user`.forbide_flag AS forbideFlag
+        FROM
+        sys_user AS `user`  where `user`.open_id=#{openId}
+    </select>
+
+    <!-- 修改用户微信信息-->
+    <update id="updateWeiXinInfo" parameterType="com.github.pig.admin.model.entity.SysUser">
+        UPDATE sys_user set  nick_name=#{nickName},avatar_url=#{avatarUrl},gender=#{gender},
+        <if test="insider !=null">
+            insider=#{insider},
+        </if>
+        <if test="birthday !=null">
+            birthday=#{birthday},
+        </if>
+        <if test="personSignatureName !=null">
+            person_signature_name=#{personSignatureName},
+        </if>
+        <if test="province !=null">
+            province=#{province},
+        </if>
+        <if test="city !=null">
+            city=#{city},
+        </if>
+        <if test="country !=null">
+            country=#{country},
+        </if>
+        <if test="language !=null">
+            `language`=#{language},
+        </if>
+        update_time=#{updateTime}
+        where open_id=#{openId}
+    </update>
+
+    <!-- 修改用户微信信息-->
+    <update id="updateUserPersonSignatureName" parameterType="com.github.pig.admin.model.entity.SysUser">
+        UPDATE sys_user set person_signature_name=#{personSignatureName},update_time=#{updateTime}
+        where user_id=#{userId}
+    </update>
+
+    <!-- 修改用户是否允许查看个人信息-->
+    <update id="updateUserAllowFlag" parameterType="com.github.pig.admin.model.entity.SysUser">
+        UPDATE sys_user set allow_flag=#{allowFlag},update_time=sysdate()
+        where user_id=#{userId}
+    </update>
+
+    <!-- 修改用户积分-->
+    <update id="updateUserAmount" parameterType="com.github.pig.admin.model.entity.SysUser">
+        UPDATE sys_user set amount=#{amount},update_time=sysdate()
+        where user_id=#{userId}
+    </update>
+
+    <!-- 修改用户是否禁用-->
+    <update id="updateUserForbideFlag" parameterType="com.github.pig.admin.model.entity.SysUser">
+        UPDATE sys_user set forbide_flag=#{forbideFlag},update_time=sysdate()
+        where user_id=#{userId}
+    </update>
+
+    <select id="findUserByNickname" parameterType="com.github.pig.admin.model.dto.SysUserDto" resultMap="userVoResultMap">
+        <include refid="selectUserVo"/>
+        WHERE
+        <if test="nickName != null and nickName != ''">
+            and `user`.nickName LIKE CONCAT('%',#{nickName},'%')
+        </if>
+         limit #{pageNum},#{pageSize}
+    </select>
+
+
+    <select id="selectUser" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.entity.SysUser">
+         SELECT
+        `user`.user_id as userId,
+        `user`.nick_name as nickName,
+        `user`.avatar_url,
+        `user`.gender,
+        `user`.province,
+        `user`.city,
+        `user`.country,
+        `user`.language,
+        `user`.username,
+        `user`.`password`,
+        `user`.salt,
+        `user`.phone,
+        `user`.avatar
+        from  sys_user AS `user`
+        <where>
+            <if test="userDom.nickName != null and userDom.nickName !='' ">
+                and `user`.nick_name LIKE CONCAT('%',#{userDom.nickName},'%')
+            </if>
+        </where>
+        order by `user`.user_id
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <select id="selectUserCount" parameterType="com.github.pig.admin.model.dom.UserDom"  resultType="long">
+        SELECT count(1)
+        from  sys_user AS `user`
+        <where>
+            <if test="userDom.nickName != null and userDom.nickName !='' ">
+                and `user`.nick_name LIKE CONCAT('%',#{userDom.nickName},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectUsersByAmount" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.entity.SysUser">
+        SELECT
+        `user`.user_id as userId,
+        `user`.nick_name as nickName,
+        `user`.avatar_url,
+        `user`.gender,
+        `user`.province,
+        `user`.city,
+        `user`.country,
+        `user`.language,
+        `user`.username,
+        `user`.`password`,
+        `user`.salt,
+        `user`.phone,
+        `user`.avatar,
+        `user`.amount
+        from  sys_user AS `user`
+        <where>
+            <if test="userDom.userId != null">
+                `user`.user_id=#{userDom.userId}
+            </if>
+        </where>
+        order by `user`.amount DESC
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <select id="selectUserByAmountCount"   parameterType="com.github.pig.admin.model.dom.UserDom" resultType="long">
+        SELECT count(1) from
+        sys_user AS `user`
+        <where>
+            <if test="userDom.userId != null">
+                `user`.user_id=#{userDom.userId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 按照发帖数排行-->
+    <select id="findUserRankByPost" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        select  h.user_id userId,count(1) as times,u.nick_name as nickName,u.open_id openId,u.avatar_url avatarUrl, u.city,u.province ,u.country from  sys_user u
+        LEFT JOIN  bbs_posts h on h.user_id = u.user_id
+        <where>
+            <if test="userDom.userId != null">
+                h.user_id=#{userDom.userId}
+            </if>
+        </where>
+        GROUP BY u.user_id
+        ORDER BY times DESC
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <select id="findUserRankByPostCount" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="long">
+        SELECT count(1) from (
+        select  h.user_id  from  bbs_posts h
+        LEFT JOIN sys_user u on h.user_id = u.user_id
+        <where>
+            <if test="userDom.userId != null">
+                h.user_id=#{userDom.userId}
+            </if>
+        </where>
+        GROUP BY h.user_id
+        ) c
+    </select>
+
+    <!-- 按照回帖数排行-->
+    <select id="findUserRankByReply" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        select  u.user_id userId,count(1) as times,u.nick_name as nickName,u.open_id openId,u.avatar_url avatarUrl, u.city,u.province ,u.country from  sys_user u
+        LEFT JOIN  bbs_reply h on h.user_id = u.user_id
+        <where>
+            <if test="userDom.userId != null">
+                u.user_id=#{userDom.userId}
+            </if>
+        </where>
+        GROUP BY u.user_id
+        ORDER BY times DESC
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <select id="findUserRankByReplyCount" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="long">
+        SELECT count(1) from (
+        select  h.user_id  from  bbs_reply h
+        LEFT JOIN sys_user u on h.user_id = u.user_id
+        <where>
+            <if test="userDom.userId != null">
+                h.user_id=#{user.userId}
+            </if>
+        </where>
+        GROUP BY h.user_id
+        ) c
+    </select>
+
+
+    <!-- 按照采纳数排行-->
+    <select id="findUserRankByReplyAccept" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        select  h.user_id userId,count(1) as times,u.nick_name as nickName,u.open_id openId,u.avatar_url avatarUrl, u.city,u.province ,u.country from  sys_user u
+        LEFT JOIN  bbs_reply h on h.user_id = u.user_id
+        <where>
+             h.accept = 1
+            <if test="userDom.userId != null">
+               AND  h.user_id=#{userDom.userId}
+            </if>
+
+        </where>
+        GROUP BY h.user_id
+        ORDER BY times DESC
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <select id="findUserRankByReplyAcceptCount" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="long">
+        SELECT count(1) from (
+        select  h.user_id  from  bbs_reply h
+        LEFT JOIN sys_user u on h.user_id = u.user_id
+        <where>
+            h.accept = 1
+            <if test="userDom.userId != null">
+               and h.user_id=#{userDom.userId}
+            </if>
+        </where>
+        GROUP BY h.user_id
+        ) c
+    </select>
+
+
+    <!-- 按照打赏数排行-->
+    <select id="findUserRankByAward"  parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        select  u.user_id userId,count(1) as times,u.nick_name as nickName,u.open_id openId,u.avatar_url avatarUrl, u.city,u.province ,u.country from  sys_user u
+        RIGHT JOIN  bbs_award h on h.create_id = u.user_id
+        <where>
+            <if test="userDom.userId != null">
+                h.create_id=#{userDom.userId}
+            </if>
+        </where>
+        GROUP BY u.user_id
+        ORDER BY times DESC
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <select id="findUserRankByAwardCount" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="long">
+        SELECT count(1) from (
+        select  h.create_id  from  bbs_award h
+        LEFT JOIN sys_user u on h.create_id = u.user_id
+        <where>
+            <if test="userDom.userId != null">
+                h.create_id=#{userDom.userId}
+            </if>
+        </where>
+        GROUP BY h.create_id
+        ) c
+    </select>
+
+
+    <!-- 按照浏览帖子数排行-->
+    <select id="findUserRankByBrowsePost" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        select  u.user_id userId,sum(p.look_time) as times,u.nick_name as nickName,u.open_id openId,u.avatar_url avatarUrl, u.city,u.province ,u.country from  sys_user u
+        RIGHT join bbs_posts p on p.user_id =u.user_id
+        <where>
+            <if test="userDom.userId != null">
+                u.user_id=#{userDom.userId}
+            </if>
+        </where>
+        GROUP BY p.user_id
+        ORDER BY times DESC
+      limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <select id="findUserRankByBrowsePostCount" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="long">
+        SELECT count(1) from (
+        select  h.user_id  from  bbs_posts h
+        LEFT JOIN sys_user u on h.user_id = u.user_id
+        <where>
+            <if test="userDom.userId != null">
+                h.user_id=#{userDom.userId}
+            </if>
+        </where>
+        GROUP BY h.user_id
+        ) c
+    </select>
+
+
+    <!-- 我关注的用户列表-->
+    <select id="findConcernUserListByUser" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        select u.user_id,u.avatar_url,u.nick_name,u.`language`,u.country,u.amount,u.city,u.gender from sys_user u LEFT JOIN
+        bbs_concern b on u.user_id = b.concerned_id
+        <where>
+            <if test="userDom.userId != null">
+                b.concern_id=#{userDom.userId}
+            </if>
+        </where>
+        order by b.concern_time DESC
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+    <!--我的粉丝数-->
+    <select id="findConcernUserListByUserCount" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="long">
+        select count(1) from bbs_concern b where b.concern_id=#{userDom.userId}
+        GROUP BY b.concern_id
+    </select>
+
+    <select id="findConcernedCount" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="java.lang.Long">
+        select count(1) from bbs_concern b where b.concerned_id = #{U.userId}
+    </select>
+
+    <sql id="selectFt">
+        select  u1.user_id userId1,count(h.user_id) ft  from sys_user u1 LEFT JOIN bbs_user_posts h  on  u1.user_id = h.user_id GROUP BY u1.user_id
+    </sql>
+    <!--查询用户活跃度排行,按照发帖数占权重0.4,回帖15%,浏览15%,打赏15%,采纳15% B.ft*0.4 zft,C.la*0.15 zla,D.ds*0.15 zds,E.ht*0.15 zht,F.cn*0.15 zcn ,-->
+    <select id="findUserByWeight" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+         select  u.userId ,
+	u.nickName,u.openId,u.avatarUrl, u.city,u.province ,u.country,u.concernStatus
+	 from  v_image_user_active_level u
+	/*LEFT JOIN (select h.user_id,count(h.user_id) ft  from  bbs_user_posts h   GROUP BY h.user_id) B on B.user_id=u.user_id
+	LEFT JOIN (select p.user_id,sum(p.look_time) la  from bbs_posts p  GROUP BY p.user_id) C on C.user_id=u.user_id
+	LEFT JOIN (select a.create_id,count(a.create_id) ds  from  bbs_award a  GROUP BY a.create_id) D on D.create_id=u.user_id
+	LEFT JOIN (select r.user_id, count(r.user_id) ht  from  bbs_reply r  GROUP BY r.user_id) E on E.user_id=u.user_id
+	LEFT JOIN (select r.user_id,count(r.user_id) cn  from  bbs_reply r   where r.accept=1 GROUP BY r.user_id) F on F.user_id=u.user_id
+	ORDER  BY IFNULL(B.ft*0.4,0)+IFNULL(C.la*0.15,0)+IFNULL(D.ds*0.15,0)+IFNULL(E.ht*0.15,0)+IFNULL(F.cn*0.15,0) desc*/
+         limit #{userDom.currentPage}, #{userDom.pageSize}
+
+
+
+    </select>
+
+    <select id="findUserByWeightCount"  resultType="long">
+        select count(1) from sys_user
+    </select>
+
+    <!-- 添加关注-->
+    <insert id="addConcern" parameterType="com.github.pig.admin.model.dto.BbsUserConcernDto">
+        INSERT  INTO  bbs_concern (concern_id,concerned_id,concern_time)
+        VALUES (#{bbsUserConcernDto.concernId},#{bbsUserConcernDto.concernedId},sysdate())
+     </insert>
+    <!-- 取消关注-->
+    <delete id="delConcern" parameterType="com.github.pig.admin.model.dto.BbsUserConcernDto">
+        DELETE  FROM bbs_concern WHERE concern_id=#{bbsUserConcernDto.concernId}
+        AND concerned_id=#{bbsUserConcernDto.concernedId}
+    </delete>
+
+
+    <!--赋予基本角色-->
+    <insert id="insertUserAndAuth">
+        INSERT  INTO
+        sys_user_role ( user_id , role_id)
+        VALUES (#{userId} , #{roleId})
+    </insert>
+
+    <!--关注用户数-->
+    <select id="selectConcernNum" parameterType="java.lang.Integer" resultType="java.lang.Long">
+        select count(1)
+        from bbs_concern
+        where concern_id=#{id}
+    </select>
+    <!--关注标签数-->
+    <select id="selectLabelNum" parameterType="java.lang.Integer" resultType="java.lang.Long">
+        select count(1)
+        from bbs_user_label
+        where user_id=#{id}
+    </select>
+    <!--查询达人排行,按照最终积分高低排行-->
+    <select id="findUserByScore" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        <if test="userDom.userId !=null">
+            SELECT  u.*,
+            (SELECT count(1) from bbs_concern bc WHERE bc.concerned_id=u.user_id AND bc.concern_id=#{userDom.userId} ) concernStatus
+            from sys_user u
+            ORDER  BY u.amount DESC
+        </if>
+        <if test="userDom.userId ==null">
+            SELECT  u.* from sys_user u
+            ORDER  BY u.amount DESC
+        </if>
+
+         limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <select id="findUserByScoreCount"  resultType="long">
+         SELECT  count(1) from sys_user
+    </select>
+
+    <!--查询消费排行,按照按照消费积分记录排行-->
+    <select id="findUserByConsum" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        <if test="userDom.userId !=null">
+            SELECT u.* ,
+            (select SUM(h.amount)  from bbs_point_history h where u.user_id = h.user_id) consume,
+            (SELECT count(1) from bbs_concern bc WHERE bc.concerned_id=u.user_id AND bc.concern_id=#{userDom.userId} ) concernStatus
+            from  sys_user u
+            ORDER  BY consume DESC
+        </if>
+        <if test="userDom.userId ==null">
+            SELECT u.* ,
+            (select SUM(h.amount)  from bbs_point_history h where u.user_id = h.user_id) consume
+            from  sys_user u
+            ORDER  BY consume DESC
+        </if>
+
+         limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+
+    <!--查询关注用户信息-->
+    <select id="selectConcernInfo" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        SELECT t2.*
+        FROM  bbs_concern t1 ,sys_user t2
+        WHERE t1.concern_id = #{userDom.userId}
+        and t1.concerned_id = t2.user_id
+        order by t1.concern_time
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <!--查询用户粉丝信息-->
+    <select id="selectFindConcernedInfo" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+        SELECT t2.*
+        FROM  bbs_concern t1 ,sys_user t2
+        WHERE t1.concerned_id = #{userDom.userId}
+        and t1.concern_id = t2.user_id
+        order by t1.concern_time
+        limit #{userDom.currentPage}, #{userDom.pageSize}
+    </select>
+
+    <!--查询关注状态-->
+    <select id="selectConcernStatus" parameterType="com.github.pig.admin.model.dto.BbsUserConcernDto" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM bbs_concern
+        WHERE concerned_id=#{buc.concernedId}
+        and concern_id=#{buc.concernId}
+    </select>
+
+    <!--查询当前登录人感兴趣的用户-->
+    <select id="getInterestingUsers" parameterType="com.github.pig.admin.model.dom.UserDom" resultType="com.github.pig.admin.model.dto.SysUserDto">
+         SELECT su.*,
+        (SELECT count(1) from bbs_concern bc WHERE bc.concerned_id=su.user_id AND bc.concern_id=14 GROUP BY bc.concern_id) concernStatus
+         from sys_user  su  WHERE su.user_id IN
+        (
+        SELECT user_id  from bbs_user_label WHERE label_id IN
+        (select c.labelId from (
+        select u.user_id userId, bul.label_id labelId from  sys_user u
+        LEFT JOIN bbs_user_label bul on u.user_id=bul.user_id
+        where u.user_id=#{userId}) c)
+        )    AND su.user_id not in (SELECT bc.concerned_id from bbs_concern bc WHERE bc.concern_id=#{userId}) AND su.user_id != #{userId}
+        limit 0,10
+    </select>
+    <!--批量添加关注用户信息-->
+    <insert id="insertConcerns" >
+      INSERT  INTO
+         bbs_concern ( concern_id , concerned_id)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+        (#{item.concernId},#{item.concernedId})
+        </foreach>
+    </insert>
+
+
+    <!--查询用户发布帖子的最多类型和标签-->
+    <select id="selectMaxvUserType" parameterType="java.lang.Integer" resultType="com.github.pig.common.vo.BbsArticleTypeVO">
+    select  t.name,(select  b.count
+    from(
+    select article_type ,count(*) as count
+    from bbs_posts
+    where user_id=#{userId}
+    group by article_type
+    order by count desc
+    limit 1)b) ArticleTypeNum
+    from bbs_article_type t
+    where t.id=
+    (select  c.article_type
+    from(
+    select article_type ,count(*) as count
+    from bbs_posts
+    where user_id=#{userId}
+    group by article_type
+    order by count desc
+    limit 1) c)
+    </select>
+
+    <!--查询用户发布帖子的最多类型和标签-->
+    <select id="selectMaxUserLabel" parameterType="java.lang.Integer" resultType="com.github.pig.common.vo.BbsLabelVO">
+    select  t.name,(select  b.count
+    from(
+    select label_Id ,count(*) as count
+    from bbs_user_label
+    where user_id=#{userId}
+    group by label_Id
+    order by count desc
+    limit 1)b) userLabelNum
+    from bbs_label t
+    where t.id=
+    (select  c.label_Id
+    from(
+    select label_Id ,count(*) as count
+    from bbs_user_label
+    where user_id=#{userId}
+    group by label_Id
+    order by count desc
+    limit 1) c)
+    </select>
+
+</mapper>

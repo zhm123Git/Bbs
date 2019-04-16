@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.pig.bbs.posts.mapper.BbsAwardMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.github.pig.bbs.posts.entity.BbsAward">
+        <id column="id" property="id" />
+        <result column="posts_id" property="postsId" />
+        <result column="gift_id" property="giftId" />
+        <result column="content" property="content" />
+        <result column="create_id" property="createId" />
+        <result column="create_date" property="createDate" />
+        <result column="del_flag" property="delFlag" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, posts_id AS postsId, gift_id AS giftId, content, create_id AS createId, create_date AS createDate, del_flag AS delFlag
+    </sql>
+
+    <insert id="giveAward" parameterType="com.github.pig.bbs.posts.DOM.BbsAwardDom">
+        INSERT  INTO bbs_award(posts_id,gift_id,content,create_id,create_date)
+        VALUES (#{postsId},#{giftId},#{content},#{createId},sysdate())
+    </insert>
+
+
+
+</mapper>
